@@ -1,0 +1,40 @@
+Build a full-stack "BLOGGING APP PROJECT" and get it LIVE with a public URL. Priority: a working, deployed app. Keep explanations minimal; do not write docs, tests, or long descriptions. Only write code and fix errors.
+
+TECH STACK
+Backend: Java 17, Spring Boot 3.x, Maven, Spring Security + JWT, Spring Data JPA/Hibernate, MySQL, Bean Validation, Lombok, Swagger (springdoc)
+Frontend: React (Vite), Axios, React Router, Tailwind CSS
+
+FEATURES
+1. Auth: register, login, JWT, BCrypt, roles ADMIN/USER
+2. Posts: create, edit, delete, view, draft/published, slug, cover image URL
+3. Categories and tags: admin CRUD, assign to posts, filter by category/tag
+4. Comments: add, delete own, admin can delete any
+5. Likes: like/unlike, no duplicates (unique constraint)
+6. Home feed: pagination, sort (latest / most liked), keyword search
+7. Author profile page with their posts
+8. Admin dashboard: manage users, posts, categories, comments
+9. Reading-time estimate and view count
+
+ARCHITECTURE RULES
+- Controller -> Service -> Repository, with DTOs (never expose entities)
+- Global exception handler (@RestControllerAdvice) with proper HTTP status codes
+- Validation on request DTOs
+- Users can edit/delete only their own content; admin can manage everything
+- All APIs under /api/v1/
+- CORS enabled for the frontend URL
+- No secrets in code: DB URL, DB user/password, and JWT secret come from environment variables
+
+FRONTEND PAGES
+Login, Register, Home (feed + search), Post details (comments + like), Create/Edit post, User dashboard, Admin dashboard. Use protected routes, an Axios interceptor to attach the JWT, and a clean, responsive Tailwind UI.
+
+DEPLOYMENT (IMPORTANT)
+- Make the app production-ready: build scripts, correct ports, environment variables.
+- Seed demo data on first run: 1 ADMIN (admin@blog.com / Admin@123), 1 USER (user@blog.com / User@123), 2 categories, 3 sample posts.
+- Deploy the backend, database, and frontend, and give me the final live URLs.
+- If the platform can't run Spring Boot or MySQL, tell me the closest working option before changing the stack.
+
+HOW TO WORK
+- Build in 2 big steps: (1) the complete backend, then (2) the complete frontend + integration + deployment.
+- Do not ask unnecessary questions. Make sensible decisions and keep going.
+- Verify the app runs and fix errors yourself before reporting.
+- At the end, give only: live frontend URL, live backend/Swagger URL, and demo credentials.
