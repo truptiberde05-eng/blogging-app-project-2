@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Thoughtline Blog"
+description = "A full-stack publishing platform for readers and writers, with discoverable posts, author profiles, comments, likes, categories, and publishing tools."
+version = "1.0.0"
+id = "artifacts/thoughtline"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24313
+
+[services.development]
+run = "pnpm --filter @workspace/thoughtline run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/thoughtline", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/thoughtline/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24313"
+BASE_PATH = "/"

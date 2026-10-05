@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-mono: var(--app-font-mono);
+}
+
+:root {
+  --background: 38 40% 96%;
+  --foreground: 174 25% 17%;
+  --card: 40 43% 99%;
+  --card-foreground: 174 25% 17%;
+  --popover: 40 43% 99%;
+  --popover-foreground: 174 25% 17%;
+  --primary: 166 39% 29%;
+  --primary-foreground: 38 40% 96%;
+  --secondary: 34 44% 89%;
+  --secondary-foreground: 174 25% 17%;
+  --muted: 36 27% 91%;
+  --muted-foreground: 170 10% 43%;
+  --accent: 17 61% 57%;
+  --accent-foreground: 38 40% 96%;
+  --destructive: 2 62% 48%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 35 25% 84%;
+  --input: 35 25% 84%;
+  --ring: 166 39% 29%;
+  --app-font-sans: 'DM Sans', sans-serif;
+  --app-font-serif: 'Newsreader', Georgia, serif;
+  --app-font-mono: 'DM Mono', monospace;
+  --radius: 0.6rem;
+}
+
+.dark {
+  --background: 174 24% 12%;
+  --foreground: 38 34% 91%;
+  --card: 174 20% 16%;
+  --card-foreground: 38 34% 91%;
+  --popover: 174 20% 16%;
+  --popover-foreground: 38 34% 91%;
+  --primary: 163 38% 58%;
+  --primary-foreground: 174 25% 12%;
+  --secondary: 174 16% 22%;
+  --secondary-foreground: 38 34% 91%;
+  --muted: 174 16% 22%;
+  --muted-foreground: 38 12% 65%;
+  --accent: 17 61% 61%;
+  --accent-foreground: 174 25% 12%;
+  --destructive: 2 62% 53%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 174 14% 27%;
+  --input: 174 14% 27%;
+  --ring: 163 38% 58%;
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground antialiased; font-family: var(--app-font-sans); }
+  button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+  ::selection { background: hsl(var(--accent) / .22); }
+}
+
+.serif { font-family: var(--app-font-serif); }
+.mono { font-family: var(--app-font-mono); }
+.page-enter { animation: page-in .45s cubic-bezier(.2,.75,.25,1) both; }
+.reveal { animation: rise-in .55s cubic-bezier(.2,.75,.25,1) both; }
+.reveal-delay-1 { animation-delay: .08s; }
+.reveal-delay-2 { animation-delay: .16s; }
+@keyframes page-in { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes rise-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.grain::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 50; opacity: .027; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E"); }
+.story-card { transition: transform .25s ease, border-color .25s ease; }
+.story-card:hover { transform: translateY(-3px); border-color: hsl(var(--primary) / .38); }
+.focus-ring:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }

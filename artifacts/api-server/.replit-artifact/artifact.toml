@@ -10,23 +10,18 @@ name = "API Server"
 paths = ["/api"]
 
 [services.development]
-run = "pnpm --filter @workspace/api-server run dev"
+run = "mvn spring-boot:run"
 
 [services.production]
 
 [services.production.build]
-args = ["pnpm", "--filter", "@workspace/api-server", "run", "build"]
-
-[services.production.build.env]
-NODE_ENV = "production"
+args = ["mvn", "-DskipTests", "package"]
 
 [services.production.run]
-# we don't run through pnpm to make startup faster in production
-args = ["node", "--enable-source-maps", "artifacts/api-server/dist/index.mjs"]
+args = ["java", "-jar", "target/thoughtline-api-1.0.0.jar"]
 
 [services.production.run.env]
 PORT = "8080"
-NODE_ENV = "production"
 
 [services.production.health.startup]
 path = "/api/healthz"

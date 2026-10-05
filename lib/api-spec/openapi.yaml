@@ -3,13 +3,27 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Thoughtline blogging application API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Registration and sign-in
+  - name: posts
+    description: Published posts and author drafts
+  - name: comments
+    description: Post discussions
+  - name: categories
+    description: Post categories
+  - name: tags
+    description: Post tags
+  - name: users
+    description: Author profiles and account settings
+  - name: admin
+    description: Administrative tools
 paths:
   /healthz:
     get:
@@ -24,7 +38,604 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /v1/auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Create a reader account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "409":
+          $ref: "#/components/responses/ErrorResponse"
+  /v1/auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+  /v1/users/me:
+    get:
+      operationId: getCurrentUser
+      tags: [users]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+  /v1/users/me/posts:
+    get:
+      operationId: getMyPosts
+      tags: [users]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Current user's drafts and published posts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostPage"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+  /v1/users/{username}:
+    get:
+      operationId: getAuthorProfile
+      tags: [users]
+      summary: View an author profile
+      parameters:
+        - $ref: "#/components/parameters/Username"
+      responses:
+        "200":
+          description: Public author profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthorProfile"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+  /v1/users/{username}/posts:
+    get:
+      operationId: getAuthorPosts
+      tags: [users]
+      parameters:
+        - $ref: "#/components/parameters/Username"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Published posts by the author
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostPage"
+  /v1/posts:
+    get:
+      operationId: listPosts
+      tags: [posts]
+      summary: Browse published posts
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: tag
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [latest, most-liked]
+            default: latest
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Published post page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostPage"
+    post:
+      operationId: createPost
+      tags: [posts]
+      security:
+        - bearerAuth: []
+      summary: Create a post or draft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "201":
+          description: Post created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+  /v1/posts/{slug}:
+    get:
+      operationId: getPost
+      tags: [posts]
+      parameters:
+        - $ref: "#/components/parameters/Slug"
+      responses:
+        "200":
+          description: Post detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDetail"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+    put:
+      operationId: updatePost
+      tags: [posts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Slug"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "200":
+          description: Post updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+    delete:
+      operationId: deletePost
+      tags: [posts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Slug"
+      responses:
+        "204":
+          description: Post deleted
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+  /v1/posts/{postId}/likes:
+    post:
+      operationId: likePost
+      tags: [posts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+      responses:
+        "200":
+          description: Like added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LikeStatus"
+    delete:
+      operationId: unlikePost
+      tags: [posts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+      responses:
+        "200":
+          description: Like removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LikeStatus"
+  /v1/posts/{postId}/comments:
+    get:
+      operationId: listComments
+      tags: [comments]
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+      responses:
+        "200":
+          description: Comments on a post
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+    post:
+      operationId: createComment
+      tags: [comments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+  /v1/comments/{commentId}:
+    delete:
+      operationId: deleteComment
+      tags: [comments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: Comment deleted
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+  /v1/categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+  /v1/tags:
+    get:
+      operationId: listTags
+      tags: [tags]
+      responses:
+        "200":
+          description: Tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tag"
+  /v1/admin/dashboard:
+    get:
+      operationId: getAdminDashboard
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Administrative summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSummary"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+  /v1/admin/posts:
+    get:
+      operationId: listAdminPosts
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [all, published, draft]
+            default: all
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: All posts, including drafts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostPage"
+  /v1/admin/comments:
+    get:
+      operationId: listAdminComments
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Recent comments across the site
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+  /v1/admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Site users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPage"
+  /v1/admin/users/{userId}/role:
+    put:
+      operationId: updateUserRole
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleInput"
+      responses:
+        "200":
+          description: User role updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /v1/admin/categories:
+    post:
+      operationId: createCategory
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaxonomyInput"
+      responses:
+        "201":
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+  /v1/admin/categories/{categoryId}:
+    put:
+      operationId: updateCategory
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaxonomyInput"
+      responses:
+        "200":
+          description: Category updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+    delete:
+      operationId: deleteCategory
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: Category deleted
+  /v1/admin/tags:
+    post:
+      operationId: createTag
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaxonomyInput"
+      responses:
+        "201":
+          description: Tag created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+  /v1/admin/tags/{tagId}:
+    put:
+      operationId: updateTag
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tagId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaxonomyInput"
+      responses:
+        "200":
+          description: Tag updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+    delete:
+      operationId: deleteTag
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tagId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: Tag deleted
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    Size:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 10
+    Username:
+      name: username
+      in: path
+      required: true
+      schema:
+        type: string
+    Slug:
+      name: slug
+      in: path
+      required: true
+      schema:
+        type: string
+    PostId:
+      name: postId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+  responses:
+    ErrorResponse:
+      description: Request could not be completed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +644,179 @@ components:
           type: string
       required:
         - status
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    RegisterInput:
+      type: object
+      properties:
+        username: { type: string, minLength: 3, maxLength: 32 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8, maxLength: 100 }
+        displayName: { type: string, minLength: 1, maxLength: 80 }
+      required: [username, email, password, displayName]
+    LoginInput:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 1 }
+      required: [email, password]
+    AuthResponse:
+      type: object
+      properties:
+        token: { type: string }
+        user: { $ref: "#/components/schemas/User" }
+      required: [token, user]
+    User:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        username: { type: string }
+        email: { type: string, format: email }
+        displayName: { type: string }
+        bio: { type: ["string", "null"] }
+        role: { type: string, enum: [ADMIN, USER] }
+        createdAt: { type: string, format: date-time }
+      required: [id, username, email, displayName, role, createdAt]
+    AuthorProfile:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        username: { type: string }
+        displayName: { type: string }
+        bio: { type: ["string", "null"] }
+        postCount: { type: integer }
+      required: [id, username, displayName, postCount]
+    Category:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: ["string", "null"] }
+        postCount: { type: integer }
+      required: [id, name, slug, postCount]
+    Tag:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        slug: { type: string }
+      required: [id, name, slug]
+    PostInput:
+      type: object
+      properties:
+        title: { type: string, minLength: 3, maxLength: 180 }
+        excerpt: { type: string, maxLength: 400 }
+        content: { type: string, minLength: 1 }
+        coverImageUrl: { type: ["string", "null"], format: uri }
+        status: { type: string, enum: [DRAFT, PUBLISHED] }
+        categoryId: { type: ["integer", "null"], format: int64 }
+        tagIds:
+          type: array
+          items: { type: integer, format: int64 }
+      required: [title, excerpt, content, status, tagIds]
+    Post:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        title: { type: string }
+        slug: { type: string }
+        excerpt: { type: string }
+        content: { type: string }
+        coverImageUrl: { type: ["string", "null"] }
+        status: { type: string, enum: [DRAFT, PUBLISHED] }
+        readingTimeMinutes: { type: integer }
+        viewCount: { type: integer }
+        likeCount: { type: integer }
+        commentCount: { type: integer }
+        author: { $ref: "#/components/schemas/AuthorProfile" }
+        category: { oneOf: [{ $ref: "#/components/schemas/Category" }, { type: "null" }] }
+        tags:
+          type: array
+          items: { $ref: "#/components/schemas/Tag" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, title, slug, excerpt, content, status, readingTimeMinutes, viewCount, likeCount, commentCount, author, tags, createdAt, updatedAt]
+    PostDetail:
+      allOf:
+        - $ref: "#/components/schemas/Post"
+        - type: object
+          properties:
+            likedByCurrentUser: { type: boolean }
+          required: [likedByCurrentUser]
+    PostPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items: { $ref: "#/components/schemas/Post" }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+      required: [content, page, size, totalElements, totalPages]
+    CommentInput:
+      type: object
+      properties:
+        content: { type: string, minLength: 1, maxLength: 2000 }
+      required: [content]
+    Comment:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        content: { type: string }
+        author: { $ref: "#/components/schemas/AuthorProfile" }
+        postId: { type: integer, format: int64 }
+        postTitle: { type: string }
+        createdAt: { type: string, format: date-time }
+        canDelete: { type: boolean }
+      required: [id, content, author, postId, postTitle, createdAt, canDelete]
+    LikeStatus:
+      type: object
+      properties:
+        liked: { type: boolean }
+        likeCount: { type: integer }
+      required: [liked, likeCount]
+    TaxonomyInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        description: { type: ["string", "null"], maxLength: 300 }
+      required: [name]
+    RoleInput:
+      type: object
+      properties:
+        role: { type: string, enum: [ADMIN, USER] }
+      required: [role]
+    AdminSummary:
+      type: object
+      properties:
+        totalUsers: { type: integer }
+        totalPosts: { type: integer }
+        publishedPosts: { type: integer }
+        draftPosts: { type: integer }
+        totalComments: { type: integer }
+        totalCategories: { type: integer }
+        recentPosts:
+          type: array
+          items: { $ref: "#/components/schemas/Post" }
+        recentComments:
+          type: array
+          items: { $ref: "#/components/schemas/Comment" }
+      required: [totalUsers, totalPosts, publishedPosts, draftPosts, totalComments, totalCategories, recentPosts, recentComments]
+    UserPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items: { $ref: "#/components/schemas/User" }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+      required: [content, page, size, totalElements, totalPages]
 
